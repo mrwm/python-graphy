@@ -19,7 +19,7 @@ import svgwrite # for making the svg's
 graph_numbers = [15177, 12922, 8111] # no need for totals
 graph_colors = ["cyan", "#f9f06b", "#ff416c"]
 
-line_stroke_width = "18"
+line_stroke_w = "18"
 file_name = "3.7-headcount.svg"
 
 make_donut = True # False for full circle graph and True for donuts
@@ -27,11 +27,7 @@ make_donut = True # False for full circle graph and True for donuts
 
 ################################################################################
 ###### Main part of the program
-name="circle" # we need a name for the graph, tho it doesn't matter what it is
-dwg = svgwrite.Drawing(filename=file_name, size=(175,175))
-current_group = dwg.add(dwg.g(id=name, stroke='red', stroke_width=3, fill='red', fill_opacity=1 ))
-
-def addArc(dwg, current_group, p0, p1, radius, f_color):
+def addArc(dwg, current_group, p0, p1, radius, f_color, line_stroke_width):
     """ Adds an arc that bulges to the right as it moves from p0 to p1 """
     args = {'x0':p0[0], 
         'y0':p0[1], 
@@ -74,33 +70,42 @@ def num_to_degree(index=0, list_given=None):
       divisor += list_given[num] # get the sum up to the index given
   return round((divisor / total)*360)
 
-# This is kinda arbitrary, but we want a constant radius, so here it is.
-circle_size = math.degrees(math.sin(math.radians(90)))
-#print(circle_size)
+def draw_out():
+  name="circle" # we need a name for the graph, tho it doesn't matter what it is
+  dwg = svgwrite.Drawing(filename=file_name, size=(175,175))
+  current_group = dwg.add(dwg.g(id=name, stroke='red', stroke_width=3, fill='red', fill_opacity=1 ))
 
-# Make a solid circle if we don't want a donut
-if not make_donut:
-  line_stroke_width = circle_size*2
 
-# Look thru all the numbers in the list and graph them out!
-for index in range(0, len(graph_numbers)):
-  # Set the starting and ending angles for the circle
-  if index == 0 and index != len(graph_numbers):
-    # start the first slice at 0
-    start_angle = 0
-    end_angle = num_to_degree(index, graph_numbers)
-  elif index != len(graph_numbers):
-    # Start at the last slice calculated
-    start_angle = num_to_degree(index-1, graph_numbers)
-    end_angle = num_to_degree(index, graph_numbers)
+  # This is kinda arbitrary, but we want a constant radius, so here it is.
+  circle_size = math.degrees(math.sin(math.radians(90)))
+  #print(circle_size)
+
+  # Make a solid circle if we don't want a donut
+  if not make_donut:
+    line_stroke_w = circle_size*2
   else:
-    # Start the last slice backwards since we're ending the slice at 0
-    start_angle = num_to_degree(index, graph_numbers)
-    end_angle = 0
+    line_stroke_w = 18
 
-  # Set the slice color  
-  fill_color = graph_colors[index]
-  addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color)
+  # Look thru all the numbers in the list and graph them out!
+  for index in range(0, len(graph_numbers)):
+    # Set the starting and ending angles for the circle
+    if index == 0 and index != len(graph_numbers):
+      # start the first slice at 0
+      start_angle = 0
+      end_angle = num_to_degree(index, graph_numbers)
+    elif index != len(graph_numbers):
+      # Start at the last slice calculated
+      start_angle = num_to_degree(index-1, graph_numbers)
+      end_angle = num_to_degree(index, graph_numbers)
+    else:
+      # Start the last slice backwards since we're ending the slice at 0
+      start_angle = num_to_degree(index, graph_numbers)
+      end_angle = 0
 
-dwg.save()
+    # Set the slice color  
+    fill_color = graph_colors[index]
+    addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
 
+  dwg.save()
+
+draw_out()
