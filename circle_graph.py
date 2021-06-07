@@ -28,7 +28,7 @@ make_donut = True # False for full circle graph and True for donuts
 ################################################################################
 ###### Main part of the program
 name="circle" # we need a name for the graph, tho it doesn't matter what it is
-dwg = svgwrite.Drawing(filename=file_name, debug=True, size=(100,100))
+dwg = svgwrite.Drawing(filename=file_name, size=(175,175))
 current_group = dwg.add(dwg.g(id=name, stroke='red', stroke_width=3, fill='red', fill_opacity=1 ))
 
 def addArc(dwg, current_group, p0, p1, radius, f_color):
@@ -51,7 +51,10 @@ def anglept(angle=0):
   # reason: python trig functions use radians, but we want degrees
   x_point = math.degrees(math.cos(math.radians(angle)))
   y_point = math.degrees(math.sin(math.radians(angle)))
-  point=[x_point,y_point]
+
+  # Offset number taken from the calculation for circle_size
+  center_offset = 57.29577951308232 * 1.5
+  point=[x_point + center_offset, y_point + center_offset]
   return point
 
 def num_to_degree(index=0, list_given=None):
@@ -73,6 +76,7 @@ def num_to_degree(index=0, list_given=None):
 
 # This is kinda arbitrary, but we want a constant radius, so here it is.
 circle_size = math.degrees(math.sin(math.radians(90)))
+#print(circle_size)
 
 # Make a solid circle if we don't want a donut
 if not make_donut:
