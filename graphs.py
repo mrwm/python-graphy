@@ -33,14 +33,18 @@ class fragile(object):
       return True
     return error
 
-def line_count(file_name):
+def header_count(file_name):
   """
-    returns the number of lines in a file
+    returns the number of headers in a file
   """
   count = 0
   with fragile(open(file_name, "r")) as file_input:
     for line in file_input:
-      count += 1
+      c_line_content = line.rstrip("\n").split(",")
+
+      # Check if this is the start of a set of data using config information
+      if c_line_content[1] == "r" or c_line_content[1] == "r":
+        count += 1
   return count
 
 def dict_to_list(dictionary_in):
@@ -318,14 +322,18 @@ line_buffer = 0
 capture = conf_graph(line_buffer)
 line_buffer += capture[0]
 draw_rect_graph(capture[1], capture[2], capture[3])
+for i in range(0, header_count(csv_file)):
+  capture = conf_graph(line_buffer)
+  line_buffer += capture[0]
+  draw_rect_graph(capture[1], capture[2], capture[3])
 
-capture = conf_graph(line_buffer)
-line_buffer += capture[0]
-draw_rect_graph(capture[1], capture[2], capture[3])
+#capture = conf_graph(line_buffer)
+#line_buffer += capture[0]
+#draw_rect_graph(capture[1], capture[2], capture[3])
 
-capture = conf_graph(line_buffer)
-line_buffer += capture[0]
-draw_rect_graph(capture[1], capture[2], capture[3])
+#capture = conf_graph(line_buffer)
+#line_buffer += capture[0]
+#draw_rect_graph(capture[1], capture[2], capture[3])
 
 #capture = conf_graph(line_buffer)
 #line_buffer = capture[0]
