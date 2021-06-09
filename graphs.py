@@ -43,8 +43,11 @@ def header_count(file_name):
       c_line_content = line.rstrip("\n").split(",")
 
       # Check if this is the start of a set of data using config information
-      if c_line_content[1] == "r" or c_line_content[1] == "r":
+      if (c_line_content[1] == "r") or (c_line_content[1] == "c"):
         count += 1
+
+  # subtract from one because we don't want to go past the last header
+  count -= 1
   return count
 
 def dict_to_list(dictionary_in):
@@ -86,7 +89,7 @@ def conf_graph(line_buffer):
       if c_line_content[1] == "r" and line_count == 0:
         config = {
           "filename" : c_line_content[0],
-          "draw_mode" : c_line_content[1],
+          "draw_mode" : c_line_content[1].lower(),
           "rect_width" : float(c_line_content[2]),
           "v_offset" : float(c_line_content[3]),
           "st_width" : float(c_line_content[4]),
@@ -98,7 +101,7 @@ def conf_graph(line_buffer):
       elif c_line_content[1] == "c" and line_count == 0:
         config = {
           "filename" : c_line_content[0],
-          "draw_mode" : c_line_content[1],
+          "draw_mode" : c_line_content[1].lower(),
           "line_stroke_width" : c_line_content[2],
           "make_donut" : c_line_content[6].lower(),
         }
@@ -245,7 +248,8 @@ def anglept(angle=0):
 def num_to_degree(index=0, list_given=None):
   """
     Calculates the degrees of 360° from the total of the given list
-    Note: Degree is cumulative.
+    Note: Degree is cumulative, and if the degree is over 180°, the function
+          will split the degree into two parts (180° + the remainder)
           Eg: index=1 will have the degree of 360° of index=0 + index=1
   """
   if list_given == None:
@@ -257,13 +261,24 @@ def num_to_degree(index=0, list_given=None):
     total += list_given[num] # add all the list numbers
     if num <= index:
       divisor += list_given[num] # get the sum up to the index given
-  return round((divisor / total)*360)
+
+  # Check if the current number is over 50%
+  isOverHalf = False
+  numerator = list_given[index]
+  if round((numerator / total)*100) > 50:
+    isOverHalf = True
+  return [isOverHalf, round((divisor / total)*360)]
 
 def draw_round_graph(config, height_dictionary, color_dictionary):
   """
     Draws the donut or pie graph with the given hight and color values
   """
-  line_stroke_w = 0
+  if config["draw_mode"] != "c":
+    # toss the data to make a round graph
+    draw_round_graph(config, height_dictionary, color_dictionary)
+    return
+
+  line_stroke_w = config["line_stroke_width"]
   name="circle" # we need a name for the graph, tho it doesn't matter what it is
   dwg = svgwrite.Drawing(filename=config["filename"] + ".svg", size=(175,175))
   current_group = dwg.add(dwg.g(id=name, stroke='red', stroke_width=3, fill='red', fill_opacity=1 ))
@@ -276,31 +291,69 @@ def draw_round_graph(config, height_dictionary, color_dictionary):
   # Make a solid circle if we don't want a donut
   if config["make_donut"] != "true":
     line_stroke_w = circle_size*2
-  else:
-    line_stroke_w = config["line_stroke_width"]
 
   graph_numbers = dict_to_list(height_dictionary)
   graph_colors = dict_to_list(color_dictionary)
 
+  last_angle_used = 0
   # Look thru all the numbers in the list and graph them out!
   for index in range(0, len(graph_numbers)):
-    # Set the starting and ending angles for the circle
-    if index == 0 and index != len(graph_numbers):
-      # start the first slice at 0
-      start_angle = 0
-      end_angle = num_to_degree(index, graph_numbers)
-    elif index != len(graph_numbers):
-      # Start at the last slice calculated
-      start_angle = num_to_degree(index-1, graph_numbers)
-      end_angle = num_to_degree(index, graph_numbers)
-    else:
-      # Start the last slice backwards since we're ending the slice at 0
-      start_angle = num_to_degree(index, graph_numbers)
-      end_angle = 0
-
+ 
     # Set the slice color  
     fill_color = graph_colors[index]
+
+    # Check if the current slice is over 180° itself
+    if not num_to_degree(index, graph_numbers)[0]:
+      # Create the slices
+      if index == 0 and index != len(graph_numbers):
+        # start the first slice at 0
+        start_angle = last_angle_used
+        end_angle = num_to_degree(index, graph_numbers)[1]
+        #print("a first slice", start_angle, end_angle)
+      elif index != len(graph_numbers):
+        # Start at the last slice calculated
+        start_angle = last_angle_used
+        end_angle = num_to_degree(index, graph_numbers)[1]
+        #print("a followed slice", start_angle, end_angle)
+      else:
+        start_angle = 0
+        end_angle = 0
+        print("a Something went wrong. Was there a bad number?")
+    elif num_to_degree(index, graph_numbers)[0]:
+      if index == 0 and index != len(graph_numbers):
+        # start the first 1/2 slice at 0
+        start_angle = last_angle_used
+        end_angle = num_to_degree(index, graph_numbers)[1] / 2
+        # draw the split slice that is over 180°
+        addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+
+        # start the second 1/2 slice at the place where we last stopped
+        start_angle = end_angle
+        end_angle = num_to_degree(index, graph_numbers)[1]
+        #print("first slice", start_angle, end_angle)
+      elif index != len(graph_numbers):
+        # Start at the last slice calculated
+        start_angle = last_angle_used
+        end_angle = num_to_degree(index, graph_numbers)[1] / 2
+        addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+
+        # start the second 1/2 slice at the place where we last stopped
+        start_angle = end_angle
+        end_angle = num_to_degree(index, graph_numbers)[1]
+        #print("followed slice", start_angle, end_angle)
+      else:
+        start_angle = 0
+        end_angle = 0
+        print("Something went wrong. Was there a bad number?")
+    else:
+      start_angle = 0
+      end_angle = 0
+      print("Something wrong, is there a bad number?")
+
+    # Draw the slice
     addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+
+    last_angle_used = end_angle
 
   dwg.save()
   print("Exported file:", config["filename"] + ".svg")
@@ -326,19 +379,4 @@ for i in range(0, header_count(csv_file)):
   capture = conf_graph(line_buffer)
   line_buffer += capture[0]
   draw_rect_graph(capture[1], capture[2], capture[3])
-
-#capture = conf_graph(line_buffer)
-#line_buffer += capture[0]
-#draw_rect_graph(capture[1], capture[2], capture[3])
-
-#capture = conf_graph(line_buffer)
-#line_buffer += capture[0]
-#draw_rect_graph(capture[1], capture[2], capture[3])
-
-#capture = conf_graph(line_buffer)
-#line_buffer = capture[0]
-#draw_rect_graph(capture[1], capture[2], capture[3])
-
-
-
 
