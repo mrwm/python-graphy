@@ -5,8 +5,9 @@ Draws SVG graphs using python
 
 Note: `graph.py` takes in a csv file that needs to be specifically formatted as such:
 
-|-|A|B|C|D|E|F|G|H|
-|1|Filename / color|mode [r|c]|<sup>1</sup>rectangle width / donut thickness|<sup>1</sup>offset|<sup>1</sup>line width|<sup>1</sup>dot size|<sup>1</sup>show rectangle / make donut|<sup>1</sup>show line|
+|-| A | B | C | D | E | F | G | H |
+|---|---|---|---|---|---|---|---|---|
+|1|Filename / color|mode [r/c]|<sup>1</sup>rectangle width / donut thickness|<sup>1</sup>offset|<sup>1</sup>line width|<sup>1</sup>dot size|<sup>1</sup>show rectangle / make donut|<sup>1</sup>show line|
 |2|---|---|---|---|---|---|---|---|
 |3|ExampleName|r|80|100|1|2.5|false|true|
 |4|red|80|79|60|43|52|53|60|
