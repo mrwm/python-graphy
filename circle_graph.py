@@ -96,57 +96,45 @@ def draw_out():
   last_angle_used = 0
   # Look thru all the numbers in the list and graph them out!
   for index in range(0, len(graph_numbers)):
- 
+    split = 1
+
     # Set the slice color  
     fill_color = graph_colors[index]
 
-    # Check if the current slice is over 180° itself
-    if not num_to_degree(index, graph_numbers)[0]:
-      # Create the slices
-      if index == 0 and index != len(graph_numbers):
-        # start the first slice at 0
-        start_angle = last_angle_used
-        end_angle = num_to_degree(index, graph_numbers)[1]
-        #print("a first slice", start_angle, end_angle)
-      elif index != len(graph_numbers):
-        # Start at the last slice calculated
-        start_angle = last_angle_used
-        end_angle = num_to_degree(index, graph_numbers)[1]
-        #print("a followed slice", start_angle, end_angle)
-      else:
-        start_angle = 0
-        end_angle = 0
-        print("a Something went wrong. Was there a bad number?")
-    elif num_to_degree(index, graph_numbers)[0]:
-      if index == 0 and index != len(graph_numbers):
-        # start the first 1/2 slice at 0
-        start_angle = last_angle_used
-        end_angle = num_to_degree(index, graph_numbers)[1] / 2
-        # draw the split slice that is over 180°
-        addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+    # Check if we need to split the slice to 2 pieces (if slice is over 180°)
+    if num_to_degree(index, graph_numbers)[0]:
+      split = 2
 
-        # start the second 1/2 slice at the place where we last stopped
-        start_angle = end_angle
-        end_angle = num_to_degree(index, graph_numbers)[1]
-        #print("first slice", start_angle, end_angle)
-      elif index != len(graph_numbers):
-        # Start at the last slice calculated
-        start_angle = last_angle_used
-        end_angle = num_to_degree(index, graph_numbers)[1] / 2
-        addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
-
-        # start the second 1/2 slice at the place where we last stopped
-        start_angle = end_angle
-        end_angle = num_to_degree(index, graph_numbers)[1]
-        #print("followed slice", start_angle, end_angle)
-      else:
-        start_angle = 0
-        end_angle = 0
-        print("Something went wrong. Was there a bad number?")
+    # Create the slice points
+    if index == 0 and index != len(graph_numbers):
+      # start the first slice at 0
+      start_angle = last_angle_used
+      end_angle = num_to_degree(index, graph_numbers)[1] / split
+      #print("a first slice", start_angle, end_angle)
+    elif index != len(graph_numbers):
+      # Start at the last slice calculated
+      start_angle = last_angle_used
+      end_angle = num_to_degree(index, graph_numbers)[1] / split
+      #print("a followed slice", start_angle, end_angle)
     else:
       start_angle = 0
       end_angle = 0
-      print("Something wrong, is there a bad number?")
+      print("a Something went wrong. Was there a bad number?")
+
+    # if we need to split the slice, then draw the first half,
+    # then recalculate the points for the second half slice.
+    if split == 2:
+      # Draw the split slice
+      addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+      # Then update to the second half of the slice
+      start_angle = end_angle
+      end_angle = num_to_degree(index, graph_numbers)[1]
+
+    # Print the % of what the slice takes up.
+    percentage = round(num_to_degree(index, graph_numbers)[1]/3.6)
+    if index != 0:
+      percentage = percentage - round(num_to_degree(index-1, graph_numbers)[1]/3.6)
+    print(index+1, ':', percentage, '%')
 
     # Draw the slice
     addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)

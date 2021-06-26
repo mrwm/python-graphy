@@ -326,11 +326,19 @@ def draw_round_graph(config, height_dictionary, color_dictionary):
     # if we need to split the slice, then draw the first half,
     # then recalculate the points for the second half slice.
     if split == 2:
-      # Draw the slice
+      # Draw the split slice
       addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
+      # Then update to the second half of the slice
       start_angle = end_angle
       end_angle = num_to_degree(index, graph_numbers)[1]
 
+    # Print the % of what the slice takes up.
+    percentage = round(num_to_degree(index, graph_numbers)[1]/3.6)
+    if index != 0:
+      percentage = percentage - round(num_to_degree(index-1, graph_numbers)[1]/3.6)
+    print(index+1, ':', percentage, '%')
+
+    # Draw the slice
     addArc(dwg, current_group, p0=anglept(end_angle), p1=anglept(start_angle), radius=circle_size, f_color=fill_color, line_stroke_width=line_stroke_w)
 
     last_angle_used = end_angle
